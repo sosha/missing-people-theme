@@ -1,0 +1,15 @@
+# WordPress Theme Git Ignore
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+vendor/
+.vscode/
+
+# Ignore sensitive info
+wp-config.php
+
+# OS generated files
+ehthumbs.db
+Icon?
+Desktop.ini
