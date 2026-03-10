@@ -30,7 +30,7 @@ wp_nav_menu([
 ]);
 ?>
             <div class="header-actions">
-                <a href="<?php echo esc_url(home_url('/report-a-case')); ?>" class="btn-urgent">Report a Case</a>
+                <a href="<?php echo esc_url(home_url('/report-a-case')); ?>" class="btn-urgent"><?php _e('Report a Case', 'mp-theme'); ?></a>
             </div>
         </nav>
         

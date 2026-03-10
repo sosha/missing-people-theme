@@ -42,4 +42,42 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.addEventListener('scroll', scrollReveal);
+
+    // Lead Submission Form Handler
+    const leadForm = document.getElementById('mpr-lead-form');
+    if (leadForm) {
+        leadForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('action', 'mpr_submit_lead');
+
+            const statusBox = this.querySelector('.form-status');
+            const submitBtn = this.querySelector('button[type="submit"]');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            statusBox.textContent = '';
+
+            fetch(mpr_push_vars.ajax_url, {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        statusBox.innerHTML = `<span style="color: #155724; background: #d4edda; padding: 10px; display: block; border-radius: 5px;">${data.data.message}</span>`;
+                        leadForm.reset();
+                    } else {
+                        statusBox.innerHTML = `<span style="color: #721c24; background: #f8d7da; padding: 10px; display: block; border-radius: 5px;">${data.data.message}</span>`;
+                    }
+                })
+                .catch(err => {
+                    statusBox.textContent = 'An error occurred. Please try again.';
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Secure Lead';
+                });
+        });
+    }
 });
