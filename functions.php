@@ -38,8 +38,33 @@ function mp_theme_setup()
     register_nav_menus([
         'primary' => __('Primary Menu', 'mp-theme'),
     ]);
+
+    // Create required pages if they don't exist
+    mp_theme_create_required_pages();
 }
 add_action('after_setup_theme', 'mp_theme_setup');
+
+/**
+ * Programmatically create required pages for the plugin.
+ */
+function mp_theme_create_required_pages()
+{
+    // Only run if we are in the admin and on theme activation or if explicitly needed
+    if (!is_admin())
+        return;
+
+    // "Report a Case" page
+    $report_page_slug = 'report-a-case';
+    if (!get_page_by_path($report_page_slug)) {
+        wp_insert_post([
+            'post_title' => 'Report a Case',
+            'post_content' => '[mpr_public_report_form]',
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'post_name' => $report_page_slug,
+        ]);
+    }
+}
 
 /**
  * Filter the search to only show missing_person posts on specific triggers if needed.
