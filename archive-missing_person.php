@@ -15,6 +15,13 @@ get_header(); ?>
 
 <section class="mpr-archive-content">
     <div class="container">
+        <div class="mpr-archive-map card">
+            <div class="archive-map-header">
+                <h2><?php _e('Map View', 'mp-theme'); ?></h2>
+                <p><?php _e('Explore cases by last known location.', 'mp-theme'); ?></p>
+            </div>
+            <div id="mpr-archive-map"></div>
+        </div>
         <?php
 // We use the shortcode logic for filtering and layout for consistency.
 echo do_shortcode('[missing_people_summary layout="grid"]');

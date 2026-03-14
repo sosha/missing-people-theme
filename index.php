@@ -12,6 +12,27 @@
                 <button type="submit" class="search-submit"><?php _e('Search Database', 'mp-theme'); ?></button>
             </form>
         </div>
+
+        <div class="hero-advanced-filters">
+            <form method="get" action="<?php echo esc_url(home_url('/missing-person/')); ?>" class="hero-filter-form">
+                <input type="text" name="mpr_search" placeholder="<?php esc_attr_e('Search name...', 'mp-theme'); ?>">
+                <input type="text" name="mpr_loc" placeholder="<?php esc_attr_e('Location...', 'mp-theme'); ?>">
+                <select name="mpr_status">
+                    <option value=""><?php _e('All Statuses', 'mp-theme'); ?></option>
+                    <option value="Missing"><?php _e('Missing', 'mp-theme'); ?></option>
+                    <option value="Found - Safe"><?php _e('Found - Safe', 'mp-theme'); ?></option>
+                    <option value="Found - Deceased"><?php _e('Found - Deceased', 'mp-theme'); ?></option>
+                    <option value="Cold Case"><?php _e('Cold Case', 'mp-theme'); ?></option>
+                </select>
+                <select name="mpr_risk">
+                    <option value=""><?php _e('Any Risk', 'mp-theme'); ?></option>
+                    <option value="Low"><?php _e('Low', 'mp-theme'); ?></option>
+                    <option value="Medium"><?php _e('Medium', 'mp-theme'); ?></option>
+                    <option value="High"><?php _e('High', 'mp-theme'); ?></option>
+                </select>
+                <button type="submit" class="btn-urgent"><?php _e('Filter Cases', 'mp-theme'); ?></button>
+            </form>
+        </div>
         
         <div class="hero-stats">
             <div class="stat-item">
@@ -34,7 +55,7 @@
         </div>
         
         <div class="mpr-summary-wrapper">
-             <?php echo do_shortcode('[missing_people_summary limit="6"]'); ?>
+             <?php echo do_shortcode('[missing_people_summary posts_per_page="6"]'); ?>
         </div>
     </div>
 </section>

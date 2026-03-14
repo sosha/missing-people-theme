@@ -15,7 +15,22 @@ while (have_posts()):
     $meta = get_post_custom(get_the_ID());
     $status = $meta['mpr_case_status'][0] ?? 'Missing';
     $risk_level = $meta['mpr_risk_level'][0] ?? 'Low';
-    $first_image_src = get_the_post_thumbnail_url(get_the_ID(), 'large') ?: MPR_PLUGIN_URL . 'assets/images/placeholder.jpg';
+    $first_image_src = get_the_post_thumbnail_url(get_the_ID(), 'large') ?: MPR_PLUGIN_URL . 'assets/images/placeholder.svg';
+    $updated_at = get_the_modified_date('', get_the_ID());
+    $created_at = get_the_date('', get_the_ID());
+    $case_url = get_permalink();
+    $family_consent = strtolower($meta['mpr_family_consent'][0] ?? '');
+
+    $verified_leads_count = 0;
+    if (function_exists('is_user_logged_in')) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'mpr_leads';
+        $verified_leads_count = (int)$wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table} WHERE case_id = %d AND status = %s",
+            get_the_ID(),
+            'verified'
+        ));
+    }
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class('single-missing-person'); ?>>
@@ -29,6 +44,12 @@ while (have_posts()):
                     <span class="mpr-badge risk-badge risk-<?php echo strtolower($risk_level); ?> <?php echo($risk_level === 'High') ? 'pulse' : ''; ?>">
                         <?php printf(__('%s Risk', 'mp-theme'), esc_html($risk_level)); ?>
                     </span>
+                    <?php if (in_array($family_consent, ['yes', 'approved', 'true'], true)): ?>
+                        <span class="mpr-badge consent-badge"><?php _e('Family Verified', 'mp-theme'); ?></span>
+                    <?php endif; ?>
+                    <?php if ($verified_leads_count > 0): ?>
+                        <span class="mpr-badge verified-leads-badge"><?php _e('Verified Leads Available', 'mp-theme'); ?></span>
+                    <?php endif; ?>
                 </div>
                 <h1 class="profile-name"><?php the_title(); ?></h1>
                 <p class="profile-subtitle"><?php printf(__('Last seen on %s in %s', 'mp-theme'), esc_html($meta['mpr_date_last_seen'][0] ?? __('Unknown Date', 'mp-theme')), esc_html($meta['mpr_last_seen_location'][0] ?? __('Unknown', 'mp-theme'))); ?></p>
@@ -58,6 +79,20 @@ while (have_posts()):
                     <p><strong><?php _e('OB Number:', 'mp-theme'); ?></strong> <?php echo esc_html($meta['mpr_ob_number'][0] ?? __('Pending', 'mp-theme')); ?></p>
                     <p class="phone-highlight"><strong><?php printf(__('Call: %s', 'mp-theme'), esc_html($meta['mpr_police_phone'][0] ?? '999')); ?></strong></p>
                 </div>
+                <div class="quick-contact-actions">
+                    <?php $police_phone = $meta['mpr_police_phone'][0] ?? ''; ?>
+                    <?php $police_email = $meta['mpr_police_email'][0] ?? ''; ?>
+                    <?php if ($police_phone): ?>
+                        <a class="btn-quick-contact" href="tel:<?php echo esc_attr(preg_replace('/\\s+/', '', $police_phone)); ?>">
+                            <?php _e('Call Now', 'mp-theme'); ?>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($police_email): ?>
+                        <a class="btn-quick-contact secondary" href="mailto:<?php echo esc_attr($police_email); ?>">
+                            <?php _e('Email Tip', 'mp-theme'); ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
                 <?php
     $agency_name = get_option('mpr_agency_name');
     if ($agency_name):
@@ -74,8 +109,9 @@ while (have_posts()):
             </div>
             
             <div class="follow-card card">
-                <?php if (function_exists('mpr_follow_button'))
-        echo mpr_follow_button(get_the_ID()); ?>
+                <?php if (function_exists('mpr_display_follow_button')) {
+        mpr_display_follow_button(get_the_ID());
+    } ?>
                 <p class="small-text"><?php _e('Follow this case for real-time updates.', 'mp-theme'); ?></p>
                 
                 <button id="mpr-push-subscribe" class="btn-subscribe-alerts" data-case-id="<?php the_ID(); ?>" style="margin-top: 15px; width: 100%;">
@@ -118,6 +154,20 @@ while (have_posts()):
                 <?php
     endif; ?>
             </div>
+
+            <div class="timeline-section card">
+                <h2><?php _e('Case Timeline', 'mp-theme'); ?></h2>
+                <ul class="timeline-list">
+                    <li>
+                        <span class="timeline-label"><?php _e('Reported', 'mp-theme'); ?></span>
+                        <span class="timeline-value"><?php echo esc_html($created_at); ?></span>
+                    </li>
+                    <li>
+                        <span class="timeline-label"><?php _e('Last Updated', 'mp-theme'); ?></span>
+                        <span class="timeline-value"><?php echo esc_html($updated_at); ?></span>
+                    </li>
+                </ul>
+            </div>
             
             <div id="mpr-lead-section" class="lead-submission-section card urgent-card">
                 <h3><span class="dashicons dashicons-shield"></span> <?php _e('Submit a Secure Lead', 'mp-theme'); ?></h3>
@@ -151,6 +201,67 @@ while (have_posts()):
                     <a href="https://www.facebook.com/sharer/sharer.php?u=<?php the_permalink(); ?>" class="share-fb" target="_blank"><?php _e('Share on Facebook', 'mp-theme'); ?></a>
                     <a href="https://twitter.com/intent/tweet?url=<?php the_permalink(); ?>&text=HELP+FIND+<?php echo urlencode(get_the_title()); ?>" class="share-x" target="_blank"><?php _e('Post on X', 'mp-theme'); ?></a>
                 </div>
+                <div class="translate-tools">
+                    <label for="mp-translate-select"><?php _e('Translate this page:', 'mp-theme'); ?></label>
+                    <select id="mp-translate-select" class="mp-translate-select" data-url="<?php echo esc_url($case_url); ?>">
+                        <option value=""><?php _e('Select language', 'mp-theme'); ?></option>
+                        <option value="sw"><?php _e('Swahili', 'mp-theme'); ?></option>
+                        <option value="fr"><?php _e('French', 'mp-theme'); ?></option>
+                        <option value="ar"><?php _e('Arabic', 'mp-theme'); ?></option>
+                        <option value="es"><?php _e('Spanish', 'mp-theme'); ?></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="related-cases card">
+                <h2><?php _e('Related Cases', 'mp-theme'); ?></h2>
+                <?php
+    $location = $meta['mpr_last_seen_location'][0] ?? '';
+    $related_args = [
+        'post_type' => 'missing_person',
+        'post_status' => 'publish',
+        'posts_per_page' => 3,
+        'post__not_in' => [get_the_ID()],
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'mpr_last_seen_location',
+                'value' => $location,
+                'compare' => 'LIKE',
+            ],
+            [
+                'key' => 'mpr_risk_level',
+                'value' => $risk_level,
+                'compare' => '=',
+            ],
+        ],
+    ];
+    $related = new WP_Query($related_args);
+    if ($related->have_posts()):
+?>
+                    <div class="related-grid">
+                        <?php while ($related->have_posts()):
+            $related->the_post(); ?>
+                            <a class="related-card" href="<?php the_permalink(); ?>">
+                                <div class="related-thumb">
+                                    <?php if (function_exists('mpr_get_case_image_url')): ?>
+                                        <img src="<?php echo esc_url(mpr_get_case_image_url(get_the_ID(), 'medium')); ?>" alt="<?php the_title_attribute(); ?>">
+                                    <?php else: ?>
+                                        <?php the_post_thumbnail('medium'); ?>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="related-info">
+                                    <strong><?php the_title(); ?></strong>
+                                    <span><?php echo esc_html(get_post_meta(get_the_ID(), 'mpr_last_seen_location', true)); ?></span>
+                                </div>
+                            </a>
+                        <?php endwhile; ?>
+                    </div>
+                <?php
+        wp_reset_postdata();
+    else: ?>
+                    <p><?php _e('No related cases found yet.', 'mp-theme'); ?></p>
+                <?php endif; ?>
             </div>
 
             <div class="discussion-section card">
@@ -194,6 +305,10 @@ while (have_posts()):
             <h2><?php _e('HAVE YOU SEEN THEM?', 'mp-theme'); ?></h2>
             <p><?php printf(__('Report to: %s', 'mp-theme'), esc_html($meta['mpr_police_station'][0] ?? __('Local Police', 'mp-theme'))); ?></p>
             <p><?php printf(__('Call: %s', 'mp-theme'), esc_html($meta['mpr_police_phone'][0] ?? '999')); ?></p>
+        </div>
+        <div class="mpr-poster-qr">
+            <h3><?php _e('Scan for Updates', 'mp-theme'); ?></h3>
+            <img src="<?php echo esc_url('https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' . rawurlencode($case_url)); ?>" alt="<?php esc_attr_e('QR Code to case page', 'mp-theme'); ?>">
         </div>
     </div>
     <div class="mpr-poster-footer">

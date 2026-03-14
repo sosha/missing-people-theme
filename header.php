@@ -8,6 +8,24 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
+<?php
+$high_risk_cases = function_exists('mp_theme_get_high_risk_cases') ? mp_theme_get_high_risk_cases() : [];
+if (!empty($high_risk_cases)): ?>
+    <div class="urgent-alert-bar">
+        <div class="container">
+            <strong><?php _e('High Risk Alerts:', 'mp-theme'); ?></strong>
+            <?php foreach ($high_risk_cases as $case): ?>
+                <a href="<?php echo esc_url($case['url']); ?>" class="urgent-alert-link">
+                    <?php echo esc_html($case['title']); ?>
+                    <?php if (!empty($case['location'])): ?>
+                        <span class="urgent-alert-location"><?php echo esc_html($case['location']); ?></span>
+                    <?php endif; ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
 <header id="masthead" class="site-header">
     <div class="container header-container">
         <div class="site-branding">
